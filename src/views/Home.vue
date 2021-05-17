@@ -23,13 +23,13 @@
 		</div>
 	</div>
 	<nav class="fixed left-0 top-0 w-full flex pl-3 pr-3 shadow-md bg-white bg-opacity-75">
-		<div class="w-1/2">
+		<div class="w-2/3">
 			<div class="p-3 flex">
 				<img :src="user.photoURL" class="w-10 h-10 rounded-full cursor-pointer" alt="">
 				<span class="font-bold mt-2 ml-2 text-black cursor-pointer">{{user.displayName}}</span>
 			</div>
 		</div>
-		<div class="w-1/2 flex justify-end">
+		<div class="w-1/3 flex justify-end">
 			<a @click="signOut" href="/" class="p-3 text-black font-medium flex">
 				<span class="mt-2 font-bold">Logout</span>
 			</a>
