@@ -2,6 +2,7 @@ import firebase from "firebase/app";
 import "firebase/auth";
 import "firebase/firestore";
 import "firebase/database";
+import "firebase/storage";
 
 var firebaseConfig = {
 	apiKey: process.env.VUE_APP_APIKEY,
@@ -19,13 +20,14 @@ firebase.initializeApp(firebaseConfig);
 const auth 		= firebase.auth()
 const firestore = firebase.firestore()
 const db 		= firebase.database()
-const user 		= auth.currentUser
+const storage 	= firebase.storage()
+const user 		= firebase.auth().currentUser
 
-const data = {
+export{
 	auth,
 	firestore,
 	db,
-	user
+	storage,
+	user,
+	firebase
 }
-
-export default data
