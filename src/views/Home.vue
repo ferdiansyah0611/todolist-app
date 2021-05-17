@@ -1,5 +1,4 @@
 <template>
-	<AlertErorr msg="Erorr"/>
 	<div id="modal">
 		<div class="opacity z-50 fixed left-0 top-0 h-screen bg-black bg-opacity-70 p-3 mb-3 overflow-auto transition-all duration-500 w-0 -ml-10">
 			<form @submit="update" class="bg-white p-2 w-full md:w-3/5 mx-auto">
@@ -31,7 +30,7 @@
 			</div>
 		</div>
 		<div class="w-1/2 flex justify-end">
-			<a href="" class="p-3 text-black font-medium flex">
+			<a @click="signOut" href="/" class="p-3 text-black font-medium flex">
 				<span class="mt-2 font-bold">Logout</span>
 			</a>
 		</div>
@@ -106,7 +105,13 @@ export default {
 			})
 		})
 	},
-  methods: {
+	methods: {
+		signOut(e){
+			e.preventDefault()
+			auth.signOut().then(() => {
+				this.$router.push({name: 'Login'})
+			})
+		},
 		changeFile(e){
 			e.target.files.forEach((data) => this.send.file = [...this.send.file, data])
 		},
@@ -150,10 +155,7 @@ export default {
 					id: this.edit.id,
 					title: this.edit.title,
 					description: this.edit.description,
-				}).then(() => {
-					console.log(this.edit.file)
 				})
-
 			}catch(e){
 				alert(e.message)
 			}
@@ -215,6 +217,6 @@ export default {
 			modal.querySelector('div').classList.remove('w-full')
 			this.keyDelete = null
 		}
-  }
+  	}
 }
 </script>
