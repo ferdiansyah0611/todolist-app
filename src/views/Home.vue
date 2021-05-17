@@ -217,6 +217,6 @@ export default {
 			modal.querySelector('div').classList.remove('w-full')
 			this.keyDelete = null
 		}
-  	}
+	}
 }
 </script>
