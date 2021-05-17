@@ -27,12 +27,16 @@ export default{
 	created(){
 		document.title = 'Login | To Do List Web App'
 	},
+	beforeMount(){
+		if(auth.currentUser){
+			this.$router.push('/')
+		}
+	},
 	methods: {
 		loginGoogle(e){
 			e.preventDefault()
 			let provider = new firebase.auth.GoogleAuthProvider()
 			firebase.auth().signInWithPopup(provider).then(result => {
-				console.log(result.user)
 				db.ref(`users/${result.user.uid}`).set({
 					id: result.user.uid,
 					name: result.user.displayName,
