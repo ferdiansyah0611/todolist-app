@@ -1,14 +1,14 @@
 <template>
+	<AlertErorr msg="Erorr"/>
 	<div id="modal">
-		<div class="opacity z-50 fixed left-0 top-0 h-screen bg-black bg-opacity-70 p-3 overflow-auto transition-all duration-500 w-0 -ml-10">
-			<form @submit="update" class="bg-white p-2 mt-10 w-full md:w-3/5 mx-auto mt-36">
+		<div class="opacity z-50 fixed left-0 top-0 h-screen bg-black bg-opacity-70 p-3 mb-3 overflow-auto transition-all duration-500 w-0 -ml-10">
+			<form @submit="update" class="bg-white p-2 w-full md:w-3/5 mx-auto">
 				<input v-model="edit.title" type="text" class="p-3 w-full focus:outline-none" placeholder="Title..." minlength="3" maxlength="120" required="">
-				<textarea v-model="edit.description" style="max-height: 400px;min-height: 150px;" class="p-3 w-full focus:outline-none" placeholder="Type here..." required=""></textarea>
+				<textarea v-model="edit.description" style="min-height: 60vh;" class="p-3 w-full focus:outline-none" placeholder="Type here..." required=""></textarea>
 				<input @change="changeFile" multiple="" type="file" name="file" class="hidden">
 				<div class="border p-1 mt-1 text-xs" v-for="(data, key) in edit.file" v-bind:key="key">
-					<span class="text-left">{{data.file}}</span> <button @click="removeQueueUpload" :data-key="key" class="bg-red-400 p-1 text-white focus:outline-none focus:ring focus:ring-red-300">Remove</button>
+					<span class="text-left" style="overflow-wrap: break-word;">{{data.file.split('/')[7].split('?alt')[0].split('%2F')[1]}}</span> <a :href="data.file" target="_blank" class="bg-blue-400 p-1 text-white focus:outline-none focus:ring focus:ring-blue-300">Open</a>
 				</div>
-				<button @click="chooseFile" type="button" class="border hover:bg-gray-300 text-black p-3 w-full focus:outline-none mt-4 transition-all duration-500">Attachment File</button>
 				<button type="submit" class="bg-blue-400 text-white p-3 w-1/2 mt-2 hover:bg-blue-500 focus:outline-none transition-all duration-500">Update</button>
 				<button @click="openModal" class="bg-red-400 text-white p-3 w-1/2 mt-2 hover:bg-red-500 focus:outline-none transition-all duration-500">Cancel</button>
 			</form>
@@ -16,7 +16,7 @@
 	</div>
 	<div id="modal-delete">
 		<div class="opacity z-50 fixed left-0 top-0 h-screen bg-black bg-opacity-70 p-3 overflow-auto transition-all duration-500 w-0 -ml-10">
-			<div class="bg-white p-2 mt-56 w-1/2 md:w-3/5 mx-auto">
+			<div class="bg-white p-2 mt-56 w-1/2 md:1/3 lg:w-1/5 mx-auto">
 				<h5 class="font-bold p-5">Are you sure ?</h5>
 				<button @click="deleteData" class="bg-blue-400 text-white p-3 w-1/2 mt-2 hover:bg-blue-500 focus:outline-none transition-all duration-500">Yes</button>
 				<button @click="openModalDelete" :data-key="keyDelete" class="bg-red-400 text-white p-3 w-1/2 mt-2 hover:bg-red-500 focus:outline-none transition-all duration-500">Cancel</button>
@@ -75,8 +75,8 @@
 <script>
 import {auth, db, storage} from '@/firebase'
 export default {
-  name: 'Home',
-  data(){
+	name: 'Home',
+	data(){
 		return{
 			user: auth.currentUser,
 			todo: [],
@@ -86,13 +86,15 @@ export default {
 				file: []
 			},
 			edit: {
+				id: '',
 				title: '',
 				description: '',
 				file: []
 			},
-			keyDelete: null
+			keyDelete: null,
+			keyUpdate: null
 		}
-  },
+	},
 	created(){
 		document.title = 'Home | To Do Web App'
 	},
@@ -119,19 +121,21 @@ export default {
 					title: this.send.title,
 					description: this.send.description,
 				})
-				this.send.file.forEach((data) => {
-					const upload = storage.ref(`/images/${data.name}`).put(data)
-					upload.on('state_changed', status => {
-						var progress = (status.bytesTransferred / status.totalBytes) * 100;
-						console.log('Upload is ' + progress + '% done');
-					}, e => console.log(e), () => {
-						upload.snapshot.ref.getDownloadURL().then(function(url) {
-							db.ref(`todo/${auth.currentUser.uid}/${push.key}/file`).push({
-								file: url
+				if(this.send.file.length >= 1){
+					this.send.file.forEach((data) => {
+						const upload = storage.ref(`/images/${data.name}`).put(data)
+						upload.on('state_changed', status => {
+							var progress = (status.bytesTransferred / status.totalBytes) * 100;
+							console.log('Upload is ' + progress + '% done');
+						}, e => console.log(e), () => {
+							upload.snapshot.ref.getDownloadURL().then(function(url) {
+								db.ref(`todo/${auth.currentUser.uid}/${push.key}/file`).push({
+									file: url
+								})
 							})
 						})
 					})
-				})
+				}
 				this.send = {
 					title: '',
 					description: '',
@@ -141,6 +145,18 @@ export default {
 		},
 		update(e){
 			e.preventDefault()
+			try{
+				db.ref(`todo/${this.user.uid}/${this.edit.id}`).set({
+					id: this.edit.id,
+					title: this.edit.title,
+					description: this.edit.description,
+				}).then(() => {
+					console.log(this.edit.file)
+				})
+
+			}catch(e){
+				alert(e.message)
+			}
 		},
 		chooseFile(e){
 			e.preventDefault()
@@ -184,20 +200,20 @@ export default {
 		},
 		deleteData(e){
 			e.preventDefault()
-			try{
-				db.ref(`todo/${this.user.uid}/${this.todo[this.keyDelete].id}`).remove().then(() => {
-					const modal = document.querySelector('#modal-delete')
-					this.keyDelete = null
-					modal.classList.remove('open')
-					modal.querySelector('div').classList.add('w-0', '-ml-10')
-					modal.querySelector('div').classList.remove('w-full')
-				}).catch(e => {
-					console.log(e)
-				})
-
-			}catch(e){
-				alert(e.message)
-			}
+			const modal = document.querySelector('#modal-delete')
+			db.ref(`todo/${this.user.uid}/${this.todo[this.keyDelete].id}`).remove().then(() => {
+				if(this.todo[this.keyDelete]['file']){
+					if(Object.keys(this.todo[this.keyDelete].file).length >= 1){
+						Object.keys(this.todo[this.keyDelete].file).forEach((data) => {
+							storage.ref(`images/${this.todo[this.keyDelete].file[data].file.split('/')[7].split('?alt')[0].split('%2F')[1]}`).delete()
+						})
+					}
+				}
+			}).catch(e => e)
+			modal.classList.remove('open')
+			modal.querySelector('div').classList.add('w-0', '-ml-10')
+			modal.querySelector('div').classList.remove('w-full')
+			this.keyDelete = null
 		}
   }
 }
